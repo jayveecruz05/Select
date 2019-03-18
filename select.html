@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Select</title>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		#selectHolder {
+			position: relative;
+			width: 100%;
+			height: 100vh;
+			border: 1px solid #F00;
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		#selector {
+			position: absolute;
+			background-color: rgba(0, 200, 255, 0.5);
+		}
+
+		.box {
+			width: 50px;
+			height: 50px;
+			margin: 10px;
+			display: inline-block;
+			background-color: #00a4ff;
+		}
+
+		.box.selected {
+			background-color: #07ff00;
+		}
+	</style>
+</head>
+<body>
+	<div id="selectHolder"></div>
+
+	<script type="text/javascript">
+		'use strict';
+
+		var selectHolder = document.querySelector('#selectHolder'),
+			allBox,
+			allSelectedBox,
+			firstX = 0,
+			firstY = 0,
+			currentX = 0,
+			currentY = 0,
+			currentTop = 0,
+			currentLeft = 0,
+			currentWidth = 0,
+			currentHeight = 0;
+
+		for (var i = 0; i < 50; i++) {
+			var box = document.createElement('div');
+				box.setAttribute('boxid', i);
+				box.classList.add('box');
+				box.onclick = function(event) {
+					// console.log(event);
+
+					allBox = document.querySelectorAll('.box'),
+					allSelectedBox = document.querySelectorAll('.selected');
+
+					if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+						// Remove All Selected Then Select Target Element
+						// for (var i = 0; i < allSelectedBox.length; i++) {
+						// 	if (event.target != allSelectedBox[i]) allSelectedBox[i].classList.remove('selected');
+						// 	if (allSelectedBox[i] == document.querySelector('.firstSelect')) allSelectedBox[i].classList.remove('firstSelect');
+						// }
+
+						// Toggle Selected Element
+						if (/selected/ig.test(event.target.className)) { // && allSelectedBox.length == 1
+							event.target.classList.remove('selected');
+							if (event.target == document.querySelector('.firstSelect')) {
+								event.target.classList.remove('firstSelect');
+								allSelectedBox = document.querySelectorAll('.selected');
+								if (allSelectedBox[0]) allSelectedBox[0].classList.add('firstSelect');
+							}
+						} else {
+							event.target.classList.add('selected');
+							if (!document.querySelector('.firstSelect')) event.target.classList.add('firstSelect');
+						}
+					}
+
+					if (event.ctrlKey || event.metaKey) {
+						// Toggle Selected Element
+						if (/selected/ig.test(event.target.className)) {
+							event.target.classList.remove('selected');
+							if (event.target == document.querySelector('.firstSelect')) {
+								event.target.classList.remove('firstSelect');
+								allSelectedBox = document.querySelectorAll('.selected');
+								if (allSelectedBox[0]) allSelectedBox[0].classList.add('firstSelect');
+							}
+						} else {
+							event.target.classList.add('selected');
+							if (!document.querySelector('.firstSelect')) event.target.classList.add('firstSelect');
+						}
+					}
+
+					if (event.shiftKey) {
+						// Toggle Selected Element
+						if (/selected/ig.test(event.target.className) && allSelectedBox.length == 1) {
+							event.target.classList.remove('selected');
+							if (event.target == document.querySelector('.firstSelect')) {
+								event.target.classList.remove('firstSelect');
+								allSelectedBox = document.querySelectorAll('.selected');
+								if (allSelectedBox[0]) allSelectedBox[0].classList.add('firstSelect');
+							}
+						} else {
+							event.target.classList.add('selected');
+							if (document.querySelector('.firstSelect') && !document.querySelector('.lastSelect')) event.target.classList.add('lastSelect');
+							if (!document.querySelector('.firstSelect')) event.target.classList.add('firstSelect');
+						}
+
+						if (document.querySelector('.firstSelect') && document.querySelector('.lastSelect')) {
+							var firstSelectID = parseInt(document.querySelector('.firstSelect').getAttribute('boxid')),
+								lastSelectID = parseInt(document.querySelector('.lastSelect').getAttribute('boxid')),
+								firstSelectIDHolder = 0;
+
+								firstSelectIDHolder = firstSelectID;
+								firstSelectID = (firstSelectID < lastSelectID) ? firstSelectID : lastSelectID;
+								lastSelectID = (lastSelectID > firstSelectID) ? lastSelectID : firstSelectIDHolder;
+
+							for (var i = 0; i < allBox.length; i++) {
+								// Reset Selected Element
+								allBox[i].classList.remove('selected');
+
+								// Select In Range Element
+								var boxid = parseInt(allBox[i].getAttribute('boxid'));
+								if (boxid >= firstSelectID && boxid <= lastSelectID) allBox[i].classList.add('selected');
+							}
+
+							document.querySelector('.lastSelect').classList.remove('lastSelect');
+						}
+					}
+				}
+			selectHolder.appendChild(box);
+		}
+
+		selectHolder.onmousedown = function(event) {
+			// console.log(event);
+
+			firstX = event.clientX;
+			firstY = event.clientY;
+
+			currentTop = 0;
+			currentLeft = 0;
+			currentWidth = 0;
+			currentHeight = 0;
+
+			// Reset Set Select
+			if (this == event.target) {
+				allSelectedBox = document.querySelectorAll('.selected');
+				for (var i = 0; i < allSelectedBox.length; i++) {
+					allSelectedBox[i].classList.remove('selected');
+					allSelectedBox[i].classList.remove('firstSelect');
+				}
+			}
+
+			selectHolder.onmousemove = function(event) {
+				// console.log(event);
+
+				currentX = event.clientX;
+				currentY = event.clientY;
+
+				// console.log('First X:', firstX, 'Current X:', currentX);
+				// console.log('First Y:', firstY, 'Current Y:', currentY);
+
+				currentTop = (currentY > firstY) ? firstY : currentY;
+				currentLeft = (currentX > firstX) ? firstX : currentX;
+
+				// console.log('Top:', currentTop, 'Left:', currentLeft);
+
+				currentWidth = Math.abs(currentX - firstX);
+				currentHeight = Math.abs(currentY - firstY);
+
+				// console.log('Width:', currentWidth, 'Height:', currentHeight);
+
+				var selector = document.querySelector('#selector');
+				
+				if (!selector) {
+					var selector = document.createElement('div');
+						selector.id = 'selector';
+						// selector.style.cssText = `
+						// 	top: ${currentTop}px;
+						// 	left: ${currentLeft}px;
+						// 	width: ${currentWidth}px;
+						// 	height: ${currentHeight}px;
+						// `;
+
+						selector.style.cssText = 'top: ' + currentTop + 'px;' +
+												 'left: ' + currentLeft + 'px;' +
+												 'width: ' + currentWidth + 'px;' +
+												 'height: ' + currentHeight + 'px;';
+
+					selectHolder.appendChild(selector);
+				} else {
+					// selector.style.cssText = `
+					// 	top: ${currentTop}px;
+					// 	left: ${currentLeft}px;
+					// 	width: ${currentWidth}px;
+					// 	height: ${currentHeight}px;
+					// `;
+
+					selector.style.cssText = 'top: ' + currentTop + 'px;' +
+											 'left: ' + currentLeft + 'px;' +
+											 'width: ' + currentWidth + 'px;' +
+											 'height: ' + currentHeight + 'px;';
+				}
+
+				var boxes = document.querySelectorAll('.box');
+
+				for (var i = 0; i < boxes.length; i++) {
+					var boxConfig = boxes[i].getBoundingClientRect(),
+						selectorConfig = selector.getBoundingClientRect();
+
+					// console.log(boxConfig);
+					// console.log(selectorConfig);
+
+					if (
+						(selectorConfig.right - boxConfig.left) >= 0 &&
+						(selectorConfig.left - boxConfig.left) <= boxConfig.width &&
+						(selectorConfig.bottom - boxConfig.top) >= 0 &&
+						(selectorConfig.top - boxConfig.top) <= boxConfig.height
+					) {
+						boxes[i].classList.add('selected');
+					} else {
+						boxes[i].classList.remove('selected');
+						boxes[i].classList.remove('firstSelect');
+					}
+				}
+
+				// Reset Set First Select
+				allSelectedBox = document.querySelectorAll('.selected');
+				for (var i = 0; i < allSelectedBox.length; i++) {
+					allSelectedBox[i].classList.remove('firstSelect');
+					if (allSelectedBox[0]) allSelectedBox[0].classList.add('firstSelect');
+				}
+			};
+
+			selectHolder.onmouseup = function(event) {
+				selectHolder.onmousemove = null;
+				var selector = document.querySelector('#selector');
+				if (selector) selector.outerHTML = '';
+			};
+		};
+	</script>
+</body>
+</html>
