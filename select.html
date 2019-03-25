@@ -60,7 +60,7 @@
 				box.onclick = function(event) {
 					// console.log(event);
 
-					allBox = document.querySelectorAll('.box'),
+					allBox = document.querySelectorAll('.box');
 					allSelectedBox = document.querySelectorAll('.selected');
 
 					if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
@@ -71,7 +71,7 @@
 						// }
 
 						// Toggle Selected Element
-						if (/selected/ig.test(event.target.className)) { // && allSelectedBox.length == 1
+						if (event.target.classList.contains('selected')) { // && allSelectedBox.length == 1
 							event.target.classList.remove('selected');
 							if (event.target == document.querySelector('.firstSelect')) {
 								event.target.classList.remove('firstSelect');
@@ -86,7 +86,7 @@
 
 					if (event.ctrlKey || event.metaKey) {
 						// Toggle Selected Element
-						if (/selected/ig.test(event.target.className)) {
+						if (event.target.classList.contains('selected')) {
 							event.target.classList.remove('selected');
 							if (event.target == document.querySelector('.firstSelect')) {
 								event.target.classList.remove('firstSelect');
@@ -101,7 +101,7 @@
 
 					if (event.shiftKey) {
 						// Toggle Selected Element
-						if (/selected/ig.test(event.target.className) && allSelectedBox.length == 1) {
+						if (event.target.classList.contains('selected') && allSelectedBox.length == 1) {
 							event.target.classList.remove('selected');
 							if (event.target == document.querySelector('.firstSelect')) {
 								event.target.classList.remove('firstSelect');
@@ -141,17 +141,13 @@
 
 		selectHolder.onmousedown = function(event) {
 			// console.log(event);
-
+			
+			// Set The First X And Y
 			firstX = event.clientX;
 			firstY = event.clientY;
 
-			currentTop = 0;
-			currentLeft = 0;
-			currentWidth = 0;
-			currentHeight = 0;
-
 			// Reset Set Select
-			if (this == event.target) {
+			if (selectHolder == event.target) {
 				allSelectedBox = document.querySelectorAll('.selected');
 				for (var i = 0; i < allSelectedBox.length; i++) {
 					allSelectedBox[i].classList.remove('selected');
@@ -162,38 +158,42 @@
 			selectHolder.onmousemove = function(event) {
 				// console.log(event);
 
+				var selectHolderConfig = selectHolder.getBoundingClientRect();
+
+                // console.log(selectHolderConfig);
+
 				currentX = event.clientX;
 				currentY = event.clientY;
 
-				// console.log('First X:', firstX, 'Current X:', currentX);
-				// console.log('First Y:', firstY, 'Current Y:', currentY);
+				// console.log({ firstX, currentX, firstY, currentY });
 
-				currentTop = (currentY > firstY) ? firstY : currentY;
-				currentLeft = (currentX > firstX) ? firstX : currentX;
+				currentTop = ((currentY > firstY) ? firstY : currentY) - selectHolderConfig.top;
+				currentLeft = ((currentX > firstX) ? firstX : currentX) - selectHolderConfig.left;
 
-				// console.log('Top:', currentTop, 'Left:', currentLeft);
+				// console.log({ currentTop, currentLeft });
 
 				currentWidth = Math.abs(currentX - firstX);
 				currentHeight = Math.abs(currentY - firstY);
 
-				// console.log('Width:', currentWidth, 'Height:', currentHeight);
+				// console.log({ currentWidth, currentHeight });
 
-				var selector = document.querySelector('#selector');
+				var boxes = document.querySelectorAll('.box'),
+					selector = document.querySelector('#selector');
 				
 				if (!selector) {
-					var selector = document.createElement('div');
-						selector.id = 'selector';
-						// selector.style.cssText = `
-						// 	top: ${currentTop}px;
-						// 	left: ${currentLeft}px;
-						// 	width: ${currentWidth}px;
-						// 	height: ${currentHeight}px;
-						// `;
+					selector = document.createElement('div');
+					selector.id = 'selector';
+					// selector.style.cssText = `
+					// 	top: ${currentTop}px;
+					// 	left: ${currentLeft}px;
+					// 	width: ${currentWidth}px;
+					// 	height: ${currentHeight}px;
+					// `;
 
-						selector.style.cssText = 'top: ' + currentTop + 'px;' +
-												 'left: ' + currentLeft + 'px;' +
-												 'width: ' + currentWidth + 'px;' +
-												 'height: ' + currentHeight + 'px;';
+					selector.style.cssText = 'top: ' + currentTop + 'px;' +
+												'left: ' + currentLeft + 'px;' +
+												'width: ' + currentWidth + 'px;' +
+												'height: ' + currentHeight + 'px;';
 
 					selectHolder.appendChild(selector);
 				} else {
@@ -210,8 +210,6 @@
 											 'height: ' + currentHeight + 'px;';
 				}
 
-				var boxes = document.querySelectorAll('.box');
-
 				for (var i = 0; i < boxes.length; i++) {
 					var boxConfig = boxes[i].getBoundingClientRect(),
 						selectorConfig = selector.getBoundingClientRect();
@@ -220,10 +218,10 @@
 					// console.log(selectorConfig);
 
 					if (
-						(selectorConfig.right - boxConfig.left) >= 0 &&
-						(selectorConfig.left - boxConfig.left) <= boxConfig.width &&
-						(selectorConfig.bottom - boxConfig.top) >= 0 &&
-						(selectorConfig.top - boxConfig.top) <= boxConfig.height
+						(selectorConfig.right - boxConfig.left) >= 0 && // Right To Left
+						(selectorConfig.left - boxConfig.left) <= boxConfig.width && // Left To Right
+						(selectorConfig.bottom - boxConfig.top) >= 0 && // Top To Bottom
+						(selectorConfig.top - boxConfig.top) <= boxConfig.height // Bottom To Top
 					) {
 						boxes[i].classList.add('selected');
 					} else {
@@ -242,6 +240,17 @@
 
 			selectHolder.onmouseup = function(event) {
 				selectHolder.onmousemove = null;
+				selectHolder.onmouseup = null;
+
+				firstX = 0;
+				firstY = 0;
+				currentX = 0;
+				currentY = 0;
+				currentTop = 0;
+				currentLeft = 0;
+				currentWidth = 0;
+				currentHeight = 0;
+
 				var selector = document.querySelector('#selector');
 				if (selector) selector.outerHTML = '';
 			};
